@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+y>
+</html><!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -39,7 +40,7 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
 
-        /* Stats cards */
+        /* Stats cards - CORES MAIS VISÍVEIS */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -48,10 +49,10 @@
         }
 
         .stat-card {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
             border-radius: 1.5rem;
             padding: 1.5rem;
-            border: 1px solid rgba(59, 130, 246, 0.3);
+            border: 1px solid rgba(59, 130, 246, 0.4);
             transition: transform 0.2s;
         }
 
@@ -60,7 +61,7 @@
         }
 
         .stat-card h3 {
-            color: #94a3b8;
+            color: #cbd5e1;
             font-size: 0.875rem;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -69,14 +70,20 @@
 
         .stat-card .value {
             font-size: 2.5rem;
-            font-weight: 700;
-            color: white;
+            font-weight: 800;
+            text-shadow: 0 0 10px rgba(0,0,0,0.3);
         }
 
-        .stat-card .trend {
-            font-size: 0.875rem;
+        .value-positive {
             color: #4ade80;
-            margin-top: 0.5rem;
+        }
+
+        .value-negative {
+            color: #f87171;
+        }
+
+        .value-neutral {
+            color: #fbbf24;
         }
 
         /* Botões */
@@ -126,7 +133,7 @@
             font-size: 0.75rem;
         }
 
-        /* Botão Apoiar - Estilo especial */
+        /* Botão Apoiar */
         .btn-support {
             background: linear-gradient(135deg, #f59e0b, #ef4444);
             color: white;
@@ -143,15 +150,9 @@
         }
 
         @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
-            }
-            70% {
-                box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
-            }
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
         }
 
         /* Inputs */
@@ -240,11 +241,58 @@
             width: 90%;
         }
 
+        /* Rodapé */
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #64748b;
+            font-size: 0.875rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 2rem;
+        }
+
+        .footer strong {
+            color: #fbbf24;
+        }
+
+        /* Busca por data */
+        .search-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .search-box .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .search-box label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .utilidades {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
         /* Utilidades */
         .flex-between {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         .grid-2 {
@@ -287,6 +335,9 @@
             .stats-grid {
                 grid-template-columns: 1fr;
             }
+            .search-box {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -296,7 +347,7 @@
 <script>
     // ==================== BANCO DE DADOS INDEXEDDB ====================
     const DB_NAME = 'OficinaModernaV2';
-    const DB_VERSION = 2;
+    const DB_VERSION = 3;
     let db = null;
 
     function openDB() {
@@ -369,11 +420,6 @@
         });
     }
 
-    async function getFuncionarioByEmail(email, oficinaEmail) {
-        const funcionarios = await getFuncionariosByOficina(oficinaEmail);
-        return funcionarios.find(f => f.email === email);
-    }
-
     async function deleteFuncionario(id) {
         const tx = db.transaction('funcionarios', 'readwrite');
         tx.objectStore('funcionarios').delete(id);
@@ -402,10 +448,33 @@
         return all;
     }
 
+    // DELETAR MOVIMENTAÇÕES ANTIGAS (mais de 1 ano)
+    async function deletarMovimentacoesAntigas(oficinaEmail) {
+        const umAnoAtras = new Date();
+        umAnoAtras.setFullYear(umAnoAtras.getFullYear() - 1);
+        const dataLimite = umAnoAtras.toISOString().slice(0, 10);
+        
+        const movimentacoes = await getMovimentacoesByOficina(oficinaEmail);
+        const antigas = movimentacoes.filter(m => m.data < dataLimite);
+        
+        if (antigas.length > 0) {
+            const tx = db.transaction('movimentacoes', 'readwrite');
+            const store = tx.objectStore('movimentacoes');
+            for (const mov of antigas) {
+                store.delete(mov.id);
+            }
+            await new Promise((resolve) => { tx.oncomplete = resolve; });
+            console.log(`${antigas.length} movimentações antigas deletadas`);
+        }
+    }
+
     // ==================== ESTADO GLOBAL ====================
     let currentUser = null;
     let currentFuncionarios = [];
     let currentMovimentacoes = [];
+    let filtroDataInicio = '';
+    let filtroDataFim = '';
+    let filtroFuncionarioId = null;
 
     // ==================== RENDER PRINCIPAL ====================
     async function renderApp() {
@@ -425,6 +494,9 @@
     }
 
     async function carregarDadosDono() {
+        // Deletar movimentações com mais de 1 ano
+        await deletarMovimentacoesAntigas(currentUser.email);
+        
         currentFuncionarios = await getFuncionariosByOficina(currentUser.email);
         currentMovimentacoes = await getMovimentacoesByOficina(currentUser.email);
         currentMovimentacoes.sort((a,b) => new Date(b.data) - new Date(a.data));
@@ -435,7 +507,7 @@
         currentMovimentacoes.sort((a,b) => new Date(b.data) - new Date(a.data));
     }
 
-    // ==================== TELA DE LOGIN/CADASTRO COM BOTÃO APOIAR ====================
+    // ==================== TELA DE LOGIN/CADASTRO ====================
     function renderLoginCadastro() {
         return `
             <div class="login-box glass-card">
@@ -444,7 +516,6 @@
                     <p style="color:#94a3b8; margin-top:0.5rem;">Gestão inteligente para sua oficina</p>
                 </div>
                 
-                <!-- BOTÃO APOIAR - MERCADO PAGO -->
                 <div class="support-banner">
                     <p>💖 Gostou do sistema? Apoie o projeto!</p>
                     <button class="btn btn-support" id="btnApoiar" style="width:100%;">
@@ -473,7 +544,6 @@
     }
 
     function attachLoginEvents() {
-        // Botão Apoiar - abre link do Mercado Pago em nova aba
         document.getElementById('btnApoiar')?.addEventListener('click', () => {
             window.open('https://mpago.la/1anBvFU', '_blank');
         });
@@ -553,9 +623,9 @@
             </div>
             
             <div class="stats-grid">
-                <div class="stat-card"><h3>💰 Total Entradas</h3><div class="value">R$ ${stats.totalEntradas.toFixed(2)}</div></div>
-                <div class="stat-card"><h3>📤 Total Saídas</h3><div class="value">R$ ${stats.totalSaidas.toFixed(2)}</div></div>
-                <div class="stat-card"><h3>📈 Lucro Total</h3><div class="value" style="color:${stats.lucro >= 0 ? '#4ade80' : '#f87171'}">R$ ${stats.lucro.toFixed(2)}</div></div>
+                <div class="stat-card"><h3>💰 Total Entradas</h3><div class="value value-positive">R$ ${stats.totalEntradas.toFixed(2)}</div></div>
+                <div class="stat-card"><h3>📤 Total Saídas</h3><div class="value value-negative">R$ ${stats.totalSaidas.toFixed(2)}</div></div>
+                <div class="stat-card"><h3>📈 Lucro Total</h3><div class="value ${stats.lucro >= 0 ? 'value-positive' : 'value-negative'}">R$ ${stats.lucro.toFixed(2)}</div></div>
             </div>
             
             <div class="glass-card">
@@ -563,9 +633,50 @@
                     <h3 style="color:white;">📊 Resumo Financeiro</h3>
                 </div>
                 <div class="grid-2 mt-2">
-                    <div><strong>📅 Hoje</strong><br/>Entradas: R$ ${stats.hoje.entradas.toFixed(2)}<br/>Saídas: R$ ${stats.hoje.saidas.toFixed(2)}</div>
-                    <div><strong>📆 Este Mês</strong><br/>Entradas: R$ ${stats.mes.entradas.toFixed(2)}<br/>Saídas: R$ ${stats.mes.saidas.toFixed(2)}</div>
-                    <div><strong>🗓️ Este Ano</strong><br/>Entradas: R$ ${stats.ano.entradas.toFixed(2)}<br/>Saídas: R$ ${stats.ano.saidas.toFixed(2)}</div>
+                    <div><strong style="color:#94a3b8;">📅 Hoje</strong><br/><span style="color:#4ade80; font-weight:bold;">Entradas: R$ ${stats.hoje.entradas.toFixed(2)}</span><br/><span style="color:#f87171; font-weight:bold;">Saídas: R$ ${stats.hoje.saidas.toFixed(2)}</span></div>
+                    <div><strong style="color:#94a3b8;">📆 Este Mês</strong><br/><span style="color:#4ade80; font-weight:bold;">Entradas: R$ ${stats.mes.entradas.toFixed(2)}</span><br/><span style="color:#f87171; font-weight:bold;">Saídas: R$ ${stats.mes.saidas.toFixed(2)}</span></div>
+                    <div><strong style="color:#94a3b8;">🗓️ Este Ano</strong><br/><span style="color:#4ade80; font-weight:bold;">Entradas: R$ ${stats.ano.entradas.toFixed(2)}</span><br/><span style="color:#f87171; font-weight:bold;">Saídas: R$ ${stats.ano.saidas.toFixed(2)}</span></div>
+                </div>
+            </div>
+            
+            <!-- BUSCA POR DATA -->
+            <div class="glass-card">
+                <div class="flex-between">
+                    <h3 style="color:white;">🔍 Buscar Movimentações</h3>
+                </div>
+                <div class="search-box">
+                    <div class="form-group">
+                        <label>Data Início</label>
+                        <input type="date" id="filtroDataInicio">
+                    </div>
+                    <div class="form-group">
+                        <label>Data Fim</label>
+                        <input type="date" id="filtroDataFim">
+                    </div>
+                    <div class="form-group">
+                        <label>Funcionário (opcional)</label>
+                        <select id="filtroFuncionario">
+                            <option value="">Todos os funcionários</option>
+                            ${currentFuncionarios.map(f => `<option value="${f.id}">${f.nome}</option>`).join('')}
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" id="btnBuscar">🔎 Buscar</button>
+                    <button class="btn btn-outline" id="btnLimparBusca">🗑️ Limpar</button>
+                </div>
+                
+                <div id="resultadoBusca">
+                    <div class="flex-between" style="margin-bottom: 1rem;">
+                        <span style="color:#94a3b8;">Resultados encontrados: <span id="totalRegistros">0</span></span>
+                        <span style="color:#4ade80;" id="totalEntradasBusca">Entradas: R$ 0,00</span>
+                        <span style="color:#f87171;" id="totalSaidasBusca">Saídas: R$ 0,00</span>
+                        <span style="color:#fbbf24;" id="totalLucroBusca">Lucro: R$ 0,00</span>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table id="tabelaBusca">
+                            <thead><tr><th>Data</th><th>Tipo</th><th>Valor</th><th>Funcionário</th><th>Descrição</th></tr></thead>
+                            <tbody id="buscaBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             
@@ -584,7 +695,7 @@
             
             <div class="glass-card">
                 <div class="flex-between">
-                    <h3 style="color:white;">📋 Movimentações</h3>
+                    <h3 style="color:white;">📋 Todas Movimentações</h3>
                     <button class="btn btn-success btn-sm" id="btnAddMovimentacao">+ Nova Movimentação</button>
                 </div>
                 <div style="overflow-x:auto; margin-top:1rem;">
@@ -593,6 +704,11 @@
                         <tbody id="movimentacoesTable"></tbody>
                     </table>
                 </div>
+            </div>
+            
+            <!-- RODAPÉ COM NOME DO ESTABELECIMENTO -->
+            <div class="footer">
+                <p>🔧 <strong>${currentUser.nome}</strong> - Oficina Moderna © 2024 | Sistema de Gestão para Oficinas</p>
             </div>
         `;
     }
@@ -605,8 +721,77 @@
         
         document.getElementById('btnAddFuncionario')?.addEventListener('click', () => mostrarModalFuncionario());
         document.getElementById('btnAddMovimentacao')?.addEventListener('click', () => mostrarModalMovimentacao());
+        document.getElementById('btnBuscar')?.addEventListener('click', () => realizarBusca());
+        document.getElementById('btnLimparBusca')?.addEventListener('click', () => limparBusca());
         
         atualizarTabelasDono();
+    }
+    
+    function realizarBusca() {
+        filtroDataInicio = document.getElementById('filtroDataInicio')?.value || '';
+        filtroDataFim = document.getElementById('filtroDataFim')?.value || '';
+        filtroFuncionarioId = document.getElementById('filtroFuncionario')?.value || null;
+        
+        let resultados = [...currentMovimentacoes];
+        
+        // Filtrar por data
+        if (filtroDataInicio) {
+            resultados = resultados.filter(m => m.data >= filtroDataInicio);
+        }
+        if (filtroDataFim) {
+            resultados = resultados.filter(m => m.data <= filtroDataFim);
+        }
+        
+        // Filtrar por funcionário
+        if (filtroFuncionarioId && filtroFuncionarioId !== '') {
+            resultados = resultados.filter(m => m.funcionarioId === parseInt(filtroFuncionarioId));
+        }
+        
+        resultados.sort((a,b) => new Date(b.data) - new Date(a.data));
+        
+        const totalEntradas = resultados.filter(m => m.tipo === 'entrada').reduce((s,m) => s + m.valor, 0);
+        const totalSaidas = resultados.filter(m => m.tipo === 'saida').reduce((s,m) => s + m.valor, 0);
+        const lucro = totalEntradas - totalSaidas;
+        
+        document.getElementById('totalRegistros').innerText = resultados.length;
+        document.getElementById('totalEntradasBusca').innerHTML = `Entradas: R$ ${totalEntradas.toFixed(2)}`;
+        document.getElementById('totalSaidasBusca').innerHTML = `Saídas: R$ ${totalSaidas.toFixed(2)}`;
+        document.getElementById('totalLucroBusca').innerHTML = `Lucro: R$ ${lucro.toFixed(2)}`;
+        
+        const tbody = document.getElementById('buscaBody');
+        if (tbody) {
+            tbody.innerHTML = resultados.map(m => {
+                const funcionario = currentFuncionarios.find(f => f.id === m.funcionarioId);
+                return `
+                    <tr>
+                        <td>${m.data}</td>
+                        <td><span class="badge ${m.tipo === 'entrada' ? 'badge-entrada' : 'badge-saida'}">${m.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span></td>
+                        <td style="${m.tipo === 'entrada' ? 'color:#4ade80;' : 'color:#f87171;'} font-weight:bold;">R$ ${m.valor.toFixed(2)}</td>
+                        <td>${funcionario?.nome || 'Dono'}</td>
+                        <td>${m.descricao || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+    
+    function limparBusca() {
+        document.getElementById('filtroDataInicio').value = '';
+        document.getElementById('filtroDataFim').value = '';
+        if (document.getElementById('filtroFuncionario')) {
+            document.getElementById('filtroFuncionario').value = '';
+        }
+        filtroDataInicio = '';
+        filtroDataFim = '';
+        filtroFuncionarioId = null;
+        
+        document.getElementById('totalRegistros').innerText = '0';
+        document.getElementById('totalEntradasBusca').innerHTML = 'Entradas: R$ 0,00';
+        document.getElementById('totalSaidasBusca').innerHTML = 'Saídas: R$ 0,00';
+        document.getElementById('totalLucroBusca').innerHTML = 'Lucro: R$ 0,00';
+        
+        const tbody = document.getElementById('buscaBody');
+        if (tbody) tbody.innerHTML = '';
     }
     
     async function atualizarTabelasDono() {
@@ -619,7 +804,7 @@
                     <tr>
                         <td>${f.nome}</td>
                         <td>${f.email}</td>
-                        <td style="color:#10b981;">R$ ${totalEntradas.toFixed(2)}</td>
+                        <td style="color:#4ade80; font-weight:bold;">R$ ${totalEntradas.toFixed(2)}</td>
                         <td><button class="btn btn-danger btn-sm" onclick="window.banirFuncionario(${f.id})">Banir</button></td>
                     </tr>
                 `;
@@ -634,7 +819,7 @@
                     <tr>
                         <td>${m.data}</td>
                         <td><span class="badge ${m.tipo === 'entrada' ? 'badge-entrada' : 'badge-saida'}">${m.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span></td>
-                        <td>R$ ${m.valor.toFixed(2)}</td>
+                        <td style="${m.tipo === 'entrada' ? 'color:#4ade80;' : 'color:#f87171;'} font-weight:bold;">R$ ${m.valor.toFixed(2)}</td>
                         <td>${funcionario?.nome || 'Dono'}</td>
                         <td>${m.descricao || '-'}</td>
                     </tr>
@@ -744,9 +929,9 @@
             </div>
             
             <div class="stats-grid">
-                <div class="stat-card"><h3>💰 Minhas Entradas</h3><div class="value">R$ ${stats.totalEntradas.toFixed(2)}</div></div>
-                <div class="stat-card"><h3>📤 Minhas Saídas</h3><div class="value">R$ ${stats.totalSaidas.toFixed(2)}</div></div>
-                <div class="stat-card"><h3>📈 Meu Resultado</h3><div class="value" style="color:${stats.lucro >= 0 ? '#4ade80' : '#f87171'}">R$ ${stats.lucro.toFixed(2)}</div></div>
+                <div class="stat-card"><h3>💰 Minhas Entradas</h3><div class="value value-positive">R$ ${stats.totalEntradas.toFixed(2)}</div></div>
+                <div class="stat-card"><h3>📤 Minhas Saídas</h3><div class="value value-negative">R$ ${stats.totalSaidas.toFixed(2)}</div></div>
+                <div class="stat-card"><h3>📈 Meu Resultado</h3><div class="value ${stats.lucro >= 0 ? 'value-positive' : 'value-negative'}">R$ ${stats.lucro.toFixed(2)}</div></div>
             </div>
             
             <div class="glass-card">
@@ -754,9 +939,9 @@
                     <h3 style="color:white;">📊 Meu Desempenho</h3>
                 </div>
                 <div class="grid-2 mt-2">
-                    <div><strong>📅 Hoje</strong><br/>Entradas: R$ ${stats.hoje.entradas.toFixed(2)}<br/>Saídas: R$ ${stats.hoje.saidas.toFixed(2)}</div>
-                    <div><strong>📆 Este Mês</strong><br/>Entradas: R$ ${stats.mes.entradas.toFixed(2)}<br/>Saídas: R$ ${stats.mes.saidas.toFixed(2)}</div>
-                    <div><strong>🗓️ Este Ano</strong><br/>Entradas: R$ ${stats.ano.entradas.toFixed(2)}<br/>Saídas: R$ ${stats.ano.saidas.toFixed(2)}</div>
+                    <div><strong style="color:#94a3b8;">📅 Hoje</strong><br/><span style="color:#4ade80; font-weight:bold;">Entradas: R$ ${stats.hoje.entradas.toFixed(2)}</span><br/><span style="color:#f87171; font-weight:bold;">Saídas: R$ ${stats.hoje.saidas.toFixed(2)}</span></div>
+                    <div><strong style="color:#94a3b8;">📆 Este Mês</strong><br/><span style="color:#4ade80; font-weight:bold;">Entradas: R$ ${stats.mes.entradas.toFixed(2)}</span><br/><span style="color:#f87171; font-weight:bold;">Saídas: R$ ${stats.mes.saidas.toFixed(2)}</span></div>
+                    <div><strong style="color:#94a3b8;">🗓️ Este Ano</strong><br/><span style="color:#4ade80; font-weight:bold;">Entradas: R$ ${stats.ano.entradas.toFixed(2)}</span><br/><span style="color:#f87171; font-weight:bold;">Saídas: R$ ${stats.ano.saidas.toFixed(2)}</span></div>
                 </div>
             </div>
             
@@ -770,6 +955,10 @@
                         <tbody id="movimentacoesTable"></tbody>
                     </table>
                 </div>
+            </div>
+            
+            <div class="footer">
+                <p>🔧 Oficina Moderna © 2024 | Sistema de Gestão para Oficinas</p>
             </div>
         `;
     }
@@ -786,7 +975,7 @@
                 <tr>
                     <td>${m.data}</td>
                     <td><span class="badge ${m.tipo === 'entrada' ? 'badge-entrada' : 'badge-saida'}">${m.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span></td>
-                    <td>R$ ${m.valor.toFixed(2)}</td>
+                    <td style="${m.tipo === 'entrada' ? 'color:#4ade80;' : 'color:#f87171;'} font-weight:bold;">R$ ${m.valor.toFixed(2)}</td>
                     <td>${m.descricao || '-'}</td>
                 </tr>
             `).join('');
