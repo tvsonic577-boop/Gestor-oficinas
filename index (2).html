@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Oficina Moderna - Gestão Completa para Oficinas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0f1c 0%, #0f172a 50%, #1e1b2e 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Glassmorphism */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border-radius: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Stats cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-card h3 {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .stat-card .trend {
+            font-size: 0.875rem;
+            color: #4ade80;
+            margin-top: 0.5rem;
+        }
+
+        /* Botões */
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 2rem;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #3b82f6;
+            color: #3b82f6;
+        }
+
+        .btn-sm {
+            padding: 0.3rem 0.8rem;
+            font-size: 0.75rem;
+        }
+
+        /* Botão Apoiar - Estilo especial */
+        .btn-support {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .btn-support:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.5);
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+            }
+        }
+
+        /* Inputs */
+        input, select, textarea {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #334155;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            color: white;
+            width: 100%;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Tabelas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 0.75rem;
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 0.75rem;
+            color: #e2e8f0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-entrada {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-saida {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* Login box */
+        .login-box {
+            max-width: 520px;
+            margin: 5vh auto;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            max-width: 500px;
+            width: 90%;
+        }
+
+        /* Utilidades */
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-2 {
+            margin-top: 1rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 1rem;
+        }
+
+        .support-banner {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.15));
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            text-align: center;
+        }
+
+        .support-banner p {
+            color: #fbbf24;
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+    // ==================== BANCO DE DADOS INDEXEDDB ====================
+    const DB_NAME = 'OficinaModernaV2';
+    const DB_VERSION = 2;
+    let db = null;
+
+    function openDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+                db = request.result;
+                resolve(db);
+            };
+            request.onupgradeneeded = (event) => {
+                const dbRef = event.target.result;
+                
+                if (!dbRef.objectStoreNames.contains('oficinas')) {
+                    const store = dbRef.createObjectStore('oficinas', { keyPath: 'email' });
+                    store.createIndex('email', 'email', { unique: true });
+                }
+                
+                if (!dbRef.objectStoreNames.contains('funcionarios')) {
+                    const store = dbRef.createObjectStore('funcionarios', { keyPath: 'id', autoIncrement: true });
+                    store.createIndex('oficinaEmail', 'oficinaEmail', { unique: false });
+                    store.createIndex('email', 'email', { unique: false });
+                }
+                
+                if (!dbRef.objectStoreNames.contains('movimentacoes')) {
+                    const store = dbRef.createObjectStore('movimentacoes', { keyPath: 'id', autoIncrement: true });
+                    store.createIndex('oficinaEmail', 'oficinaEmail', { unique: false });
+                    store.createIndex('funcionarioId', 'funcionarioId', { unique: false });
+                    store.createIndex('data', 'data', { unique: false });
+                }
+            };
+        });
+    }
+
+    // CRUD Oficinas
+    async function criarOficina(oficina) {
+        const tx = db.transaction('oficinas', 'readwrite');
+        tx.objectStore('oficinas').add(oficina);
+        return new Promise((resolve, reject) => {
+            tx.oncomplete = resolve;
+            tx.onerror = reject;
+        });
+    }
+
+    async function getOficina(email) {
+        const tx = db.transaction('oficinas', 'readonly');
+        const result = await new Promise((resolve) => {
+            const request = tx.objectStore('oficinas').get(email);
+            request.onsuccess = () => resolve(request.result);
+        });
+        return result;
+    }
+
+    // CRUD Funcionários
+    async function addFuncionario(func) {
+        const tx = db.transaction('funcionarios', 'readwrite');
+        const result = await new Promise((resolve) => {
+            const request = tx.objectStore('funcionarios').add(func);
+            request.onsuccess = () => resolve(request.result);
+        });
+        return result;
+    }
+
+    async function getFuncionariosByOficina(oficinaEmail) {
+        const tx = db.transaction('funcionarios', 'readonly');
+        const index = tx.objectStore('funcionarios').index('oficinaEmail');
+        return await new Promise((resolve) => {
+            const request = index.getAll(oficinaEmail);
+            request.onsuccess = () => resolve(request.result || []);
+        });
+    }
+
+    async function getFuncionarioByEmail(email, oficinaEmail) {
+        const funcionarios = await getFuncionariosByOficina(oficinaEmail);
+        return funcionarios.find(f => f.email === email);
+    }
+
+    async function deleteFuncionario(id) {
+        const tx = db.transaction('funcionarios', 'readwrite');
+        tx.objectStore('funcionarios').delete(id);
+        return new Promise((resolve) => { tx.oncomplete = resolve; });
+    }
+
+    // CRUD Movimentações
+    async function addMovimentacao(mov) {
+        const tx = db.transaction('movimentacoes', 'readwrite');
+        const result = await new Promise((resolve) => {
+            const request = tx.objectStore('movimentacoes').add(mov);
+            request.onsuccess = () => resolve(request.result);
+        });
+        return result;
+    }
+
+    async function getMovimentacoesByOficina(oficinaEmail, funcionarioId = null) {
+        const tx = db.transaction('movimentacoes', 'readonly');
+        const all = await new Promise((resolve) => {
+            const request = tx.objectStore('movimentacoes').index('oficinaEmail').getAll(oficinaEmail);
+            request.onsuccess = () => resolve(request.result || []);
+        });
+        if (funcionarioId) {
+            return all.filter(m => m.funcionarioId === funcionarioId);
+        }
+        return all;
+    }
+
+    // ==================== ESTADO GLOBAL ====================
+    let currentUser = null;
+    let currentFuncionarios = [];
+    let currentMovimentacoes = [];
+
+    // ==================== RENDER PRINCIPAL ====================
+    async function renderApp() {
+        const appDiv = document.getElementById('app');
+        if (!currentUser) {
+            appDiv.innerHTML = renderLoginCadastro();
+            attachLoginEvents();
+        } else if (currentUser.tipo === 'dono') {
+            await carregarDadosDono();
+            appDiv.innerHTML = renderDashboardDono();
+            attachDonoEvents();
+        } else if (currentUser.tipo === 'funcionario') {
+            await carregarDadosFuncionario();
+            appDiv.innerHTML = renderDashboardFuncionario();
+            attachFuncionarioEvents();
+        }
+    }
+
+    async function carregarDadosDono() {
+        currentFuncionarios = await getFuncionariosByOficina(currentUser.email);
+        currentMovimentacoes = await getMovimentacoesByOficina(currentUser.email);
+        currentMovimentacoes.sort((a,b) => new Date(b.data) - new Date(a.data));
+    }
+
+    async function carregarDadosFuncionario() {
+        currentMovimentacoes = await getMovimentacoesByOficina(currentUser.oficinaEmail, currentUser.funcionarioId);
+        currentMovimentacoes.sort((a,b) => new Date(b.data) - new Date(a.data));
+    }
+
+    // ==================== TELA DE LOGIN/CADASTRO COM BOTÃO APOIAR ====================
+    function renderLoginCadastro() {
+        return `
+            <div class="login-box glass-card">
+                <div class="text-center">
+                    <h1 style="color:white; font-size:2rem;">🔧 Oficina Moderna</h1>
+                    <p style="color:#94a3b8; margin-top:0.5rem;">Gestão inteligente para sua oficina</p>
+                </div>
+                
+                <!-- BOTÃO APOIAR - MERCADO PAGO -->
+                <div class="support-banner">
+                    <p>💖 Gostou do sistema? Apoie o projeto!</p>
+                    <button class="btn btn-support" id="btnApoiar" style="width:100%;">
+                        ⭐ Apoiar no Mercado Pago ⭐
+                    </button>
+                </div>
+                
+                <div style="margin-top:1rem;">
+                    <h3 style="color:white;">🔐 Login</h3>
+                    <input type="email" id="loginEmail" placeholder="E-mail" class="mt-2" />
+                    <input type="password" id="loginSenha" placeholder="Senha" class="mt-2" />
+                    <button class="btn btn-primary" id="btnLogin" style="width:100%; margin-top:1rem;">Entrar</button>
+                </div>
+                
+                <div style="margin-top:2rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.1);">
+                    <h3 style="color:white;">🏪 Nova Oficina</h3>
+                    <input type="text" id="cadNomeOficina" placeholder="Nome da oficina" class="mt-2" />
+                    <input type="email" id="cadEmail" placeholder="E-mail do dono" class="mt-2" />
+                    <input type="password" id="cadSenha" placeholder="Senha" class="mt-2" />
+                    <button class="btn btn-success" id="btnCadastrar" style="width:100%; margin-top:1rem;">Criar Oficina</button>
+                </div>
+                
+                <p id="loginMsg" style="color:#f87171; margin-top:1rem; text-align:center;"></p>
+            </div>
+        `;
+    }
+
+    function attachLoginEvents() {
+        // Botão Apoiar - abre link do Mercado Pago em nova aba
+        document.getElementById('btnApoiar')?.addEventListener('click', () => {
+            window.open('https://mpago.la/1anBvFU', '_blank');
+        });
+        
+        document.getElementById('btnLogin')?.addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value;
+            const senha = document.getElementById('loginSenha').value;
+            
+            const oficina = await getOficina(email);
+            if (oficina && oficina.senha === senha) {
+                currentUser = { email: oficina.email, nome: oficina.nome, tipo: 'dono', senha: oficina.senha };
+                renderApp();
+            } else {
+                const funcionario = await buscarFuncionarioLogin(email, senha);
+                if (funcionario) {
+                    currentUser = {
+                        email: funcionario.email,
+                        nome: funcionario.nome,
+                        tipo: 'funcionario',
+                        oficinaEmail: funcionario.oficinaEmail,
+                        funcionarioId: funcionario.id
+                    };
+                    renderApp();
+                } else {
+                    document.getElementById('loginMsg').innerText = 'E-mail ou senha inválidos';
+                }
+            }
+        });
+        
+        document.getElementById('btnCadastrar')?.addEventListener('click', async () => {
+            const nome = document.getElementById('cadNomeOficina').value;
+            const email = document.getElementById('cadEmail').value;
+            const senha = document.getElementById('cadSenha').value;
+            
+            const existe = await getOficina(email);
+            if (existe) {
+                document.getElementById('loginMsg').innerText = 'E-mail já cadastrado';
+                return;
+            }
+            
+            await criarOficina({ email, nome, senha });
+            document.getElementById('loginMsg').innerText = 'Oficina criada! Faça login.';
+            document.getElementById('loginMsg').style.color = '#4ade80';
+        });
+    }
+    
+    async function buscarFuncionarioLogin(email, senha) {
+        const oficinas = await getAllOficinas();
+        for (const oficina of oficinas) {
+            const funcionarios = await getFuncionariosByOficina(oficina.email);
+            const func = funcionarios.find(f => f.email === email && f.senha === senha);
+            if (func) return { ...func, oficinaEmail: oficina.email };
+        }
+        return null;
+    }
+    
+    async function getAllOficinas() {
+        const tx = db.transaction('oficinas', 'readonly');
+        return await new Promise((resolve) => {
+            const request = tx.objectStore('oficinas').getAll();
+            request.onsuccess = () => resolve(request.result || []);
+        });
+    }
+
+    // ==================== DASHBOARD DONO ====================
+    function renderDashboardDono() {
+        const stats = calcularStats(currentMovimentacoes);
+        
+        return `
+            <div class="glass-card flex-between">
+                <div>
+                    <h2 style="color:white;">🔧 ${currentUser.nome}</h2>
+                    <span class="badge" style="background:#3b82f6;">👑 Dono</span>
+                    <span class="badge" style="background:#8b5cf6;">${currentUser.email}</span>
+                </div>
+                <button class="btn btn-outline" id="btnLogout">Sair</button>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card"><h3>💰 Total Entradas</h3><div class="value">R$ ${stats.totalEntradas.toFixed(2)}</div></div>
+                <div class="stat-card"><h3>📤 Total Saídas</h3><div class="value">R$ ${stats.totalSaidas.toFixed(2)}</div></div>
+                <div class="stat-card"><h3>📈 Lucro Total</h3><div class="value" style="color:${stats.lucro >= 0 ? '#4ade80' : '#f87171'}">R$ ${stats.lucro.toFixed(2)}</div></div>
+            </div>
+            
+            <div class="glass-card">
+                <div class="flex-between">
+                    <h3 style="color:white;">📊 Resumo Financeiro</h3>
+                </div>
+                <div class="grid-2 mt-2">
+                    <div><strong>📅 Hoje</strong><br/>Entradas: R$ ${stats.hoje.entradas.toFixed(2)}<br/>Saídas: R$ ${stats.hoje.saidas.toFixed(2)}</div>
+                    <div><strong>📆 Este Mês</strong><br/>Entradas: R$ ${stats.mes.entradas.toFixed(2)}<br/>Saídas: R$ ${stats.mes.saidas.toFixed(2)}</div>
+                    <div><strong>🗓️ Este Ano</strong><br/>Entradas: R$ ${stats.ano.entradas.toFixed(2)}<br/>Saídas: R$ ${stats.ano.saidas.toFixed(2)}</div>
+                </div>
+            </div>
+            
+            <div class="glass-card">
+                <div class="flex-between">
+                    <h3 style="color:white;">👥 Funcionários</h3>
+                    <button class="btn btn-primary btn-sm" id="btnAddFuncionario">+ Adicionar</button>
+                </div>
+                <div style="overflow-x:auto; margin-top:1rem;">
+                    <table>
+                        <thead><tr><th>Funcionário</th><th>E-mail</th><th>Total Entradas</th><th>Ações</th></tr></thead>
+                        <tbody id="funcionariosTable"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="glass-card">
+                <div class="flex-between">
+                    <h3 style="color:white;">📋 Movimentações</h3>
+                    <button class="btn btn-success btn-sm" id="btnAddMovimentacao">+ Nova Movimentação</button>
+                </div>
+                <div style="overflow-x:auto; margin-top:1rem;">
+                    <table>
+                        <thead><tr><th>Data</th><th>Tipo</th><th>Valor</th><th>Funcionário</th><th>Descrição</th></tr></thead>
+                        <tbody id="movimentacoesTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+    
+    function attachDonoEvents() {
+        document.getElementById('btnLogout')?.addEventListener('click', () => {
+            currentUser = null;
+            renderApp();
+        });
+        
+        document.getElementById('btnAddFuncionario')?.addEventListener('click', () => mostrarModalFuncionario());
+        document.getElementById('btnAddMovimentacao')?.addEventListener('click', () => mostrarModalMovimentacao());
+        
+        atualizarTabelasDono();
+    }
+    
+    async function atualizarTabelasDono() {
+        const tbodyFunc = document.getElementById('funcionariosTable');
+        if (tbodyFunc) {
+            tbodyFunc.innerHTML = currentFuncionarios.map(f => {
+                const movsFunc = currentMovimentacoes.filter(m => m.funcionarioId === f.id);
+                const totalEntradas = movsFunc.filter(m => m.tipo === 'entrada').reduce((s,m) => s + m.valor, 0);
+                return `
+                    <tr>
+                        <td>${f.nome}</td>
+                        <td>${f.email}</td>
+                        <td style="color:#10b981;">R$ ${totalEntradas.toFixed(2)}</td>
+                        <td><button class="btn btn-danger btn-sm" onclick="window.banirFuncionario(${f.id})">Banir</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        const tbodyMov = document.getElementById('movimentacoesTable');
+        if (tbodyMov) {
+            tbodyMov.innerHTML = currentMovimentacoes.map(m => {
+                const funcionario = currentFuncionarios.find(f => f.id === m.funcionarioId);
+                return `
+                    <tr>
+                        <td>${m.data}</td>
+                        <td><span class="badge ${m.tipo === 'entrada' ? 'badge-entrada' : 'badge-saida'}">${m.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span></td>
+                        <td>R$ ${m.valor.toFixed(2)}</td>
+                        <td>${funcionario?.nome || 'Dono'}</td>
+                        <td>${m.descricao || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+    
+    window.banirFuncionario = async (id) => {
+        if (confirm('Banir este funcionário? Todas as movimentações serão mantidas.')) {
+            await deleteFuncionario(id);
+            await carregarDadosDono();
+            renderApp();
+        }
+    };
+    
+    function mostrarModalFuncionario() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content glass-card">
+                <h3 style="color:white;">➕ Adicionar Funcionário</h3>
+                <input type="text" id="funcNome" placeholder="Nome completo" class="mt-2" />
+                <input type="email" id="funcEmail" placeholder="E-mail" class="mt-2" />
+                <input type="password" id="funcSenha" placeholder="Senha" class="mt-2" />
+                <div class="grid-2 mt-2">
+                    <button class="btn btn-primary" id="confirmAddFunc">Adicionar</button>
+                    <button class="btn btn-outline" id="cancelModal">Cancelar</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        document.getElementById('confirmAddFunc')?.addEventListener('click', async () => {
+            const nome = document.getElementById('funcNome').value;
+            const email = document.getElementById('funcEmail').value;
+            const senha = document.getElementById('funcSenha').value;
+            
+            if (nome && email && senha) {
+                await addFuncionario({ nome, email, senha, oficinaEmail: currentUser.email });
+                modal.remove();
+                await carregarDadosDono();
+                renderApp();
+            }
+        });
+        
+        document.getElementById('cancelModal')?.addEventListener('click', () => modal.remove());
+    }
+    
+    function mostrarModalMovimentacao() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content glass-card">
+                <h3 style="color:white;">💰 Nova Movimentação</h3>
+                <select id="movTipo" class="mt-2">
+                    <option value="entrada">✅ Entrada</option>
+                    <option value="saida">❌ Saída</option>
+                </select>
+                <input type="number" id="movValor" placeholder="Valor (R$)" class="mt-2" />
+                <select id="movFuncionario" class="mt-2">
+                    <option value="">Selecione o funcionário</option>
+                    ${currentFuncionarios.map(f => `<option value="${f.id}">${f.nome}</option>`).join('')}
+                </select>
+                <input type="text" id="movDescricao" placeholder="Descrição (opcional)" class="mt-2" />
+                <div class="grid-2 mt-2">
+                    <button class="btn btn-success" id="confirmAddMov">Salvar</button>
+                    <button class="btn btn-outline" id="cancelModal">Cancelar</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        document.getElementById('confirmAddMov')?.addEventListener('click', async () => {
+            const tipo = document.getElementById('movTipo').value;
+            const valor = parseFloat(document.getElementById('movValor').value);
+            const funcionarioId = parseInt(document.getElementById('movFuncionario').value);
+            const descricao = document.getElementById('movDescricao').value;
+            const data = new Date().toISOString().slice(0,10);
+            
+            if (valor && !isNaN(valor) && funcionarioId) {
+                await addMovimentacao({
+                    tipo, valor, funcionarioId, descricao, data,
+                    oficinaEmail: currentUser.email
+                });
+                modal.remove();
+                await carregarDadosDono();
+                renderApp();
+            }
+        });
+        
+        document.getElementById('cancelModal')?.addEventListener('click', () => modal.remove());
+    }
+    
+    // ==================== DASHBOARD FUNCIONÁRIO ====================
+    function renderDashboardFuncionario() {
+        const stats = calcularStats(currentMovimentacoes);
+        
+        return `
+            <div class="glass-card flex-between">
+                <div>
+                    <h2 style="color:white;">👨‍🔧 ${currentUser.nome}</h2>
+                    <span class="badge" style="background:#10b981;">Funcionário</span>
+                    <span class="badge" style="background:#8b5cf6;">${currentUser.email}</span>
+                </div>
+                <button class="btn btn-outline" id="btnLogout">Sair</button>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card"><h3>💰 Minhas Entradas</h3><div class="value">R$ ${stats.totalEntradas.toFixed(2)}</div></div>
+                <div class="stat-card"><h3>📤 Minhas Saídas</h3><div class="value">R$ ${stats.totalSaidas.toFixed(2)}</div></div>
+                <div class="stat-card"><h3>📈 Meu Resultado</h3><div class="value" style="color:${stats.lucro >= 0 ? '#4ade80' : '#f87171'}">R$ ${stats.lucro.toFixed(2)}</div></div>
+            </div>
+            
+            <div class="glass-card">
+                <div class="flex-between">
+                    <h3 style="color:white;">📊 Meu Desempenho</h3>
+                </div>
+                <div class="grid-2 mt-2">
+                    <div><strong>📅 Hoje</strong><br/>Entradas: R$ ${stats.hoje.entradas.toFixed(2)}<br/>Saídas: R$ ${stats.hoje.saidas.toFixed(2)}</div>
+                    <div><strong>📆 Este Mês</strong><br/>Entradas: R$ ${stats.mes.entradas.toFixed(2)}<br/>Saídas: R$ ${stats.mes.saidas.toFixed(2)}</div>
+                    <div><strong>🗓️ Este Ano</strong><br/>Entradas: R$ ${stats.ano.entradas.toFixed(2)}<br/>Saídas: R$ ${stats.ano.saidas.toFixed(2)}</div>
+                </div>
+            </div>
+            
+            <div class="glass-card">
+                <div class="flex-between">
+                    <h3 style="color:white;">📋 Minhas Movimentações</h3>
+                </div>
+                <div style="overflow-x:auto; margin-top:1rem;">
+                    <table>
+                        <thead><tr><th>Data</th><th>Tipo</th><th>Valor</th><th>Descrição</th></tr></thead>
+                        <tbody id="movimentacoesTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+    
+    function attachFuncionarioEvents() {
+        document.getElementById('btnLogout')?.addEventListener('click', () => {
+            currentUser = null;
+            renderApp();
+        });
+        
+        const tbodyMov = document.getElementById('movimentacoesTable');
+        if (tbodyMov) {
+            tbodyMov.innerHTML = currentMovimentacoes.map(m => `
+                <tr>
+                    <td>${m.data}</td>
+                    <td><span class="badge ${m.tipo === 'entrada' ? 'badge-entrada' : 'badge-saida'}">${m.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span></td>
+                    <td>R$ ${m.valor.toFixed(2)}</td>
+                    <td>${m.descricao || '-'}</td>
+                </tr>
+            `).join('');
+        }
+    }
+    
+    // ==================== UTILITÁRIOS ====================
+    function calcularStats(movimentacoes) {
+        const hoje = new Date().toISOString().slice(0,10);
+        const mesAtual = new Date().getMonth();
+        const anoAtual = new Date().getFullYear();
+        
+        const totalEntradas = movimentacoes.filter(m => m.tipo === 'entrada').reduce((s,m) => s + m.valor, 0);
+        const totalSaidas = movimentacoes.filter(m => m.tipo === 'saida').reduce((s,m) => s + m.valor, 0);
+        
+        const hojeEntradas = movimentacoes.filter(m => m.tipo === 'entrada' && m.data === hoje).reduce((s,m) => s + m.valor, 0);
+        const hojeSaidas = movimentacoes.filter(m => m.tipo === 'saida' && m.data === hoje).reduce((s,m) => s + m.valor, 0);
+        
+        const mesMovs = movimentacoes.filter(m => {
+            const d = new Date(m.data);
+            return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
+        });
+        const mesEntradas = mesMovs.filter(m => m.tipo === 'entrada').reduce((s,m) => s + m.valor, 0);
+        const mesSaidas = mesMovs.filter(m => m.tipo === 'saida').reduce((s,m) => s + m.valor, 0);
+        
+        const anoMovs = movimentacoes.filter(m => new Date(m.data).getFullYear() === anoAtual);
+        const anoEntradas = anoMovs.filter(m => m.tipo === 'entrada').reduce((s,m) => s + m.valor, 0);
+        const anoSaidas = anoMovs.filter(m => m.tipo === 'saida').reduce((s,m) => s + m.valor, 0);
+        
+        return {
+            totalEntradas, totalSaidas,
+            lucro: totalEntradas - totalSaidas,
+            hoje: { entradas: hojeEntradas, saidas: hojeSaidas },
+            mes: { entradas: mesEntradas, saidas: mesSaidas },
+            ano: { entradas: anoEntradas, saidas: anoSaidas }
+        };
+    }
+    
+    // ==================== INICIALIZAÇÃO ====================
+    (async function init() {
+        await openDB();
+        renderApp();
+    })();
+</script>
+</body>
+</html>
